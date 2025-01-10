@@ -1,6 +1,6 @@
 import numpy as np
-import random
 import tensorflow as tf
+import secrets
 
 def spec_augment(
     segments,
@@ -24,14 +24,14 @@ def spec_augment(
 
         # ---- Frequency Masking ----
         for _ in range(num_freq_masks):
-            mask_size = random.randint(0, freq_mask_size)
-            f0 = random.randint(0, max(0, freq_dim - mask_size))
+            mask_size = secrets.SystemRandom().randint(0, freq_mask_size)
+            f0 = secrets.SystemRandom().randint(0, max(0, freq_dim - mask_size))
             segment[f0 : f0 + mask_size, :, :] = 0  # zero out in-place
 
         # ---- Time Masking ----
         for _ in range(num_time_masks):
-            mask_size = random.randint(0, time_mask_size)
-            t0 = random.randint(0, max(0, time_dim - mask_size))
+            mask_size = secrets.SystemRandom().randint(0, time_mask_size)
+            t0 = secrets.SystemRandom().randint(0, max(0, time_dim - mask_size))
             segment[:, t0 : t0 + mask_size, :] = 0  # zero out in-place
 
     # Convert back to tf.Tensor if needed
