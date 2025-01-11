@@ -20,7 +20,7 @@ class MusicGenrePredictor:
         self.IMG_HEIGHT = 128
         self.IMG_WIDTH = 128
         self.NUM_SEGMENTS = 7
-        self.MODEL_PATH = 'model/julien-hovan/saved_models/final_model.keras'
+        self.MODEL_PATH = 'prod_model.keras'
         self.GENRES = ['blues', 'classical', 'country', 'disco', 'hiphop', 
                       'jazz', 'metal', 'pop', 'reggae', 'rock']
         

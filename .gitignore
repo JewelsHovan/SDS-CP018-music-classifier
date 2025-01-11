@@ -12,5 +12,5 @@ Data/
 
 venv/
 
-*.keras
+model/julien-hovan/saved_models/
 *.h5
