@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 import librosa
 import io
 import soundfile as sf  # Add this import for audio writing
-import os
-from pathlib import Path
 matplotlib.use('Agg')  # Required for streamlit
 
 # Initialize the predictor (wrapped in cache_resource to prevent reloading)
@@ -44,44 +42,14 @@ except Exception as e:
 # Create two columns for layout
 col1, col2 = st.columns([3, 2])
 
-def load_example_files():
-    """Load example audio files from the examples directory."""
-    examples_dir = Path("examples")
-    if not examples_dir.exists():
-        return {}
-    
-    return {
-        f.name: str(f) for f in examples_dir.glob("*.mp3")
-    }
-
 with col1:
     # File upload section
     st.subheader("Upload Your Audio")
-    
-    # Add example files selector
-    example_files = load_example_files()
-    if example_files:
-        st.write("Try it out with an example:")
-        selected_example = st.selectbox(
-            "Select an example file",
-            [""] + list(example_files.keys()),
-            format_func=lambda x: "Select an example..." if x == "" else x
-        )
-        
-        if selected_example:
-            with open(example_files[selected_example], 'rb') as f:
-                uploaded_file = io.BytesIO(f.read())
-                uploaded_file.name = selected_example
-    
-    # Existing file uploader
-    uploaded_file_user = st.file_uploader(
-        "Or upload your own MP3 or WAV file",
+    uploaded_file = st.file_uploader(
+        "Choose an MP3 or WAV file",
         type=["mp3", "wav"],
         help="Maximum file size: 200MB. Files longer than 30 seconds will be trimmed."
     )
-    
-    # Combine both upload methods
-    uploaded_file = uploaded_file_user if uploaded_file_user is not None else uploaded_file
     
     if uploaded_file is not None:
         st.success("File successfully uploaded!")
