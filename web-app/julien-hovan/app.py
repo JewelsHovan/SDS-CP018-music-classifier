@@ -10,6 +10,11 @@ matplotlib.use('Agg')  # Required for streamlit
 # Initialize the predictor (wrapped in cache_resource to prevent reloading)
 @st.cache_resource
 def get_predictor():
+    """
+    Initializes and returns the MusicGenrePredictor.
+    
+    This function is cached to prevent reloading the model on every rerun.
+    """
     return MusicGenrePredictor()
 
 # Page configuration

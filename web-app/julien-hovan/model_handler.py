@@ -6,8 +6,17 @@ from attention import MultiHeadSelfAttention
 import matplotlib.pyplot as plt
 
 class MusicGenrePredictor:
+    """
+    A class for predicting the genre of music from audio files.
+
+    This class handles audio processing, model loading, and genre prediction.
+    It uses a pre-trained TensorFlow Keras model with a custom MultiHeadSelfAttention layer.
+    """
     def __init__(self):
-        # Constants
+        """
+        Initializes the MusicGenrePredictor with model parameters and loads the pre-trained model.
+        """
+        # Constants for audio processing and model input
         self.IMG_HEIGHT = 128
         self.IMG_WIDTH = 128
         self.NUM_SEGMENTS = 7
@@ -19,7 +28,15 @@ class MusicGenrePredictor:
         self.model = self._load_model()
 
     def _load_model(self):
-        """Load the trained model"""
+        """
+        Loads the pre-trained Keras model from the specified path.
+
+        Returns:
+            tf.keras.Model: The loaded Keras model.
+
+        Raises:
+            RuntimeError: If the model fails to load.
+        """
         try:
             return tf.keras.models.load_model(
                 self.MODEL_PATH,
@@ -29,7 +46,22 @@ class MusicGenrePredictor:
             raise RuntimeError(f"Failed to load model: {str(e)}")
 
     def process_audio_file(self, audio_file, sr=22050, duration=30):
-        """Process uploaded audio file into mel spectrogram segments"""
+        """
+        Processes an audio file to extract mel spectrogram segments.
+
+        Args:
+            audio_file (str or file-like object): Path to the audio file or a file-like object.
+            sr (int, optional): Sampling rate for audio loading. Defaults to 22050.
+            duration (int, optional): Duration of audio to load in seconds. Defaults to 30.
+
+        Returns:
+            tuple: A tuple containing:
+                - np.ndarray: Array of mel spectrogram segments, shape (NUM_SEGMENTS, IMG_HEIGHT, IMG_WIDTH, 1).
+                - np.ndarray: The full mel spectrogram in dB scale.
+
+        Raises:
+            RuntimeError: If audio processing fails.
+        """
         try:
             # Load audio file
             y, _ = librosa.load(audio_file, sr=sr, duration=duration)
@@ -74,7 +106,20 @@ class MusicGenrePredictor:
             raise RuntimeError(f"Failed to process audio: {str(e)}")
 
     def predict_genre(self, audio_segments):
-        """Predict genre from processed audio segments"""
+        """
+        Predicts the music genre from processed audio segments.
+
+        Args:
+            audio_segments (np.ndarray): Array of mel spectrogram segments, shape (NUM_SEGMENTS, IMG_HEIGHT, IMG_WIDTH, 1).
+
+        Returns:
+            dict: A dictionary containing:
+                - 'predicted_genre' (str): The predicted genre.
+                - 'confidence_scores' (dict): Confidence scores for each genre.
+
+        Raises:
+            RuntimeError: If prediction fails.
+        """
         try:
             # Prepare input for model (add batch dimension)
             model_input = np.expand_dims(audio_segments, axis=0)
@@ -96,7 +141,18 @@ class MusicGenrePredictor:
             raise RuntimeError(f"Failed to predict genre: {str(e)}")
 
     def generate_spectrogram_plot(self, mel_spect_db):
-        """Generate spectrogram visualization"""
+        """
+        Generates a spectrogram plot from the mel spectrogram data.
+
+        Args:
+            mel_spect_db (np.ndarray): Mel spectrogram in dB scale.
+
+        Returns:
+            matplotlib.figure.Figure: The generated matplotlib figure.
+
+        Raises:
+            RuntimeError: If spectrogram generation fails.
+        """
         try:
             plt.clf()  # Clear any existing plots
             fig, ax = plt.subplots(figsize=(10, 4))
@@ -110,4 +166,4 @@ class MusicGenrePredictor:
             return fig
             
         except Exception as e:
-            raise RuntimeError(f"Failed to generate spectrogram: {str(e)}") 
+            raise RuntimeError(f"Failed to generate spectrogram: {str(e)}")
