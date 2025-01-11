@@ -4,6 +4,7 @@ import librosa
 import sys
 from attention import MultiHeadSelfAttention
 import matplotlib.pyplot as plt
+import os
 
 class MusicGenrePredictor:
     """
@@ -20,7 +21,7 @@ class MusicGenrePredictor:
         self.IMG_HEIGHT = 128
         self.IMG_WIDTH = 128
         self.NUM_SEGMENTS = 7
-        self.MODEL_PATH = 'prod_model.keras'
+        self.MODEL_PATH = os.path.join(os.path.dirname(__file__), 'prod_model.keras')
         self.GENRES = ['blues', 'classical', 'country', 'disco', 'hiphop', 
                       'jazz', 'metal', 'pop', 'reggae', 'rock']
         
