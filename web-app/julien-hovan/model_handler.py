@@ -156,7 +156,7 @@ class MusicGenrePredictor:
         """
         try:
             plt.clf()  # Clear any existing plots
-            fig, ax = plt.subplots(figsize=(10, 4))
+            fig, ax = plt.subplots(figsize=(8, 6))
             img = librosa.display.specshow(
                 mel_spect_db,
                 y_axis='mel',

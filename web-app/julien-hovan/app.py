@@ -4,7 +4,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import librosa
 import io
-import soundfile as sf  # Add this import for audio writing
+import soundfile as sf
+import os
+
 matplotlib.use('Agg')  # Required for streamlit
 
 # Initialize the predictor (wrapped in cache_resource to prevent reloading)
@@ -39,12 +41,55 @@ except Exception as e:
     st.error(f"Error loading model: {str(e)}")
     st.session_state['model_loaded'] = False
 
-# Create two columns for layout
-col1, col2 = st.columns([3, 2])
+# Add this after the title and description
+st.markdown("### Try these examples")
+example_col1, example_col2 = st.columns([1, 2])
 
-with col1:
-    # File upload section
-    st.subheader("Upload Your Audio")
+with example_col1:
+    st.markdown("#### 🎵 Example Files")
+    example_files = {
+        "Classical Piano": "web-app/julien-hovan/examples/classical_example.wav",
+        "Jazz Ensemble": "web-app/julien-hovan/examples/jazz_example.wav",
+        "Rock Band": "web-app/julien-hovan/examples/rock_example.wav",
+        "Hip Hop Beat": "web-app/julien-hovan/examples/hiphop_example.wav"
+    }
+    
+    selected_example = st.selectbox(
+        "Select an example track",
+        [""] + list(example_files.keys()),
+        index=0,
+        help="Choose from our curated example files"
+    )
+
+with example_col2:
+    if selected_example:
+        example_path = example_files[selected_example]
+        if os.path.exists(example_path):
+            with open(example_path, 'rb') as f:
+                st.audio(f, format='audio/wav')
+                if st.button(f"Analyze {selected_example}", key=f"analyze_{selected_example}"):
+                    # Read the example file into a BytesIO object
+                    example_buffer = io.BytesIO()
+                    with open(example_path, 'rb') as example_f:
+                        example_buffer.write(example_f.read())
+                    example_buffer.seek(0)
+                    # Store in session state with a unique key
+                    st.session_state['uploaded_file'] = example_buffer
+                    # Indicate that a new file has been uploaded
+                    st.session_state['new_file_uploaded'] = True
+
+# Modify the file upload section to check session state and clear state if needed
+if 'new_file_uploaded' in st.session_state and st.session_state['new_file_uploaded']:
+    # Clear previous results when a new file is uploaded
+    if 'processed_audio' in st.session_state:
+        del st.session_state['processed_audio']
+    if 'prediction_results' in st.session_state:
+        del st.session_state['prediction_results']
+    st.session_state['new_file_uploaded'] = False
+
+if 'uploaded_file' in st.session_state:
+    uploaded_file = st.session_state['uploaded_file']
+else:
     uploaded_file = st.file_uploader(
         "Choose an MP3 or WAV file",
         type=["mp3", "wav"],
@@ -53,11 +98,22 @@ with col1:
     
     if uploaded_file is not None:
         st.success("File successfully uploaded!")
-        
-        # Initialize session state for processed audio
-        if 'processed_audio' not in st.session_state:
-            st.session_state['processed_audio'] = None
-        
+        # Indicate that a new file has been uploaded
+        st.session_state['new_file_uploaded'] = True
+
+# Initialize session state for processed audio and prediction results if not present
+if 'processed_audio' not in st.session_state:
+    st.session_state['processed_audio'] = None
+if 'prediction_results' not in st.session_state:
+    st.session_state['prediction_results'] = None
+
+# Create columns for main content
+col1, col2 = st.columns([1, 1])
+
+# Spectrogram section
+with col1:
+    st.subheader("Audio Spectrogram")
+    if uploaded_file is not None:
         with st.spinner("Processing audio..."):
             try:
                 # Load and check audio duration
@@ -85,6 +141,7 @@ with col1:
                 
                 # Display spectrogram
                 fig = predictor.generate_spectrogram_plot(mel_spect)
+                fig.set_size_inches(6, 4)
                 plt.close(fig)
                 st.pyplot(fig)
                 
@@ -94,29 +151,34 @@ with col1:
             except Exception as e:
                 st.error(f"Error processing audio: {str(e)}")
 
+# Results section
 with col2:
-    # Results section
     st.subheader("Analysis Results")
     
-    # Check if we have processed audio before attempting prediction
-    if (uploaded_file is not None and 
-        st.session_state.get('model_loaded', False) and 
-        st.session_state.get('processed_audio') is not None):
-        with st.spinner("Analyzing audio..."):
-            try:
-                # Get prediction
-                results = predictor.predict_genre(st.session_state['processed_audio'])
-                
-                # Display results
-                st.markdown("### Predicted Genre")
-                st.info(f"{results['predicted_genre'].title()}", icon="🎵")
-                
-                st.markdown("### Confidence Scores")
-                for genre, score in results['confidence_scores'].items():
-                    st.progress(score, text=f"{genre.title()}: {score:.1%}")
+    # Check if we have processed audio and the model is loaded before attempting prediction
+    if (st.session_state['processed_audio'] is not None and
+            st.session_state.get('model_loaded', False)):
+        # Only run prediction if results are not already stored or a new file has been uploaded
+        if st.session_state['prediction_results'] is None:
+            with st.spinner("Analyzing audio..."):
+                try:
+                    # Get prediction
+                    results = predictor.predict_genre(st.session_state['processed_audio'])
+                    # Store prediction results in session state
+                    st.session_state['prediction_results'] = results
                     
-            except Exception as e:
-                st.error(f"Error during prediction: {str(e)}")
+                except Exception as e:
+                    st.error(f"Error during prediction: {str(e)}")
+
+        # Display results if available
+        if st.session_state['prediction_results'] is not None:
+            results = st.session_state['prediction_results']
+            st.markdown("### Predicted Genre")
+            st.info(f"{results['predicted_genre'].title()}", icon="🎵")
+            
+            st.markdown("### Confidence Scores")
+            for genre, score in results['confidence_scores'].items():
+                st.progress(score, text=f"{genre.title()}: {score:.1%}")
 
 # Additional information
 with st.expander("About The Music Translator"):
